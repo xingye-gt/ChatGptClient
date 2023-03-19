@@ -1,7 +1,9 @@
+import 'package:chat/dal/openai/model/general_request.dart';
+import 'package:chat/dal/openai/open_ai_repository.dart';
+import 'package:chat/dal/secure_storage/secure_storage.dart';
 import 'package:flutter/material.dart';
 
 import '../setting/setting.dart';
-
 
 class Home extends StatefulWidget {
   const Home({Key? key, required this.title}) : super(key: key);
@@ -25,9 +27,11 @@ class _HomeState extends State<Home> {
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
-              // TODO: implement settings
               //go to setting page
-              Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsPage()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsPage()));
             },
           ),
         ],
@@ -36,21 +40,40 @@ class _HomeState extends State<Home> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            TextField(
-              decoration: InputDecoration(
-                hintText: '请输入文本',
+            Expanded(child: Text("123")),
+            Row(children: [
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: '请输入文本',
+                  ),
+                  onChanged: (text) {
+                    setState(() {
+                      _inputText = text;
+                    });
+                  },
+                ),
               ),
-              onChanged: (text) {
-                setState(() {
-                  _inputText = text;
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            Text(_outputText),
+              ElevatedButton(
+                onPressed: () {
+                  _makeRequest(_inputText);
+                },
+                child: const Text('Chat'),
+              ),
+            ]),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  void _makeRequest(String message) {
+    SecureStorage.read(SecureStorage.keyOpenAiToken).then((value){
+      GeneralRequest request = GeneralRequest();
+      request.apiKey = value;
+      request.message = message;
+      OpenAiRepository.makeHttpRequest(request);
+    });
   }
 }

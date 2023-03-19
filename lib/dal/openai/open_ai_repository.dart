@@ -1,15 +1,16 @@
 import 'dart:convert';
 // import 'package:http/http.dart' as http;
+import 'package:chat/dal/openai/model/general_request.dart';
 import 'package:http/http.dart' as http;
 
 class OpenAiRepository {
-  Future<void> makeHttpRequest() async {
+  static Future<void> makeHttpRequest(GeneralRequest request) async {
     final String url = 'https://api.openai.com/v1/chat/completions';
     final String apiKey = 'YOUR_OPENAI_API_KEY';
 
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $apiKey'
+      'Authorization': 'Bearer ${request.apiKey}'
     };
 
     final Map<String, dynamic> body = {
