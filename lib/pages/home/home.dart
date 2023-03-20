@@ -1,4 +1,4 @@
-import 'package:chat/dal/openai/model/general_request.dart';
+import 'package:chat/dal/openai/model/chat_request.dart';
 import 'package:chat/dal/openai/open_ai_repository.dart';
 import 'package:chat/dal/secure_storage/secure_storage.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +40,7 @@ class _HomeState extends State<Home> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Expanded(child: Text("123")),
+            Expanded(child: Text(_outputText)),
             Row(children: [
               Expanded(
                 child: TextField(
@@ -70,10 +70,14 @@ class _HomeState extends State<Home> {
 
   void _makeRequest(String message) {
     SecureStorage.read(SecureStorage.keyOpenAiToken).then((value){
-      GeneralRequest request = GeneralRequest();
+      ChatRequest request = ChatRequest();
       request.apiKey = value;
       request.message = message;
-      OpenAiRepository.makeHttpRequest(request);
+      OpenAiRepository.makeHttpRequest(request).then((value){
+        setState(() {
+          _outputText = value!.choices[0].message.content;
+        });
+      });
     });
   }
 }

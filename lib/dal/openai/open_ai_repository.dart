@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:chat/dal/openai/model/general_request.dart';
+import 'package:chat/dal/openai/model/chat_request.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+
+import 'model/chat_response.dart';
 
 class OpenAiRepository {
 
   static Dio? _dio;
 
-  static Future<void> makeHttpRequest(GeneralRequest request) async {
-    final String url = 'https://api.openai.com/v1/chat/completions';
-    final String google = "https://www.google.com";
-    final String apiKey = 'YOUR_OPENAI_API_KEY';
+  static Future<ChatResponse?> makeHttpRequest(ChatRequest request) async {
+    const String url = 'https://api.openai.com/v1/chat/completions';
 
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
@@ -21,7 +21,7 @@ class OpenAiRepository {
     final Map<String, dynamic> body = {
       'model': 'gpt-3.5-turbo',
       'messages': [
-        {'role': 'user', 'content': 'Say this is a test!'}
+        {'role': 'user', 'content': '${request.message}'}
       ],
       'temperature': 0.7
     };
@@ -29,20 +29,13 @@ class OpenAiRepository {
     dio.options.headers = headers;
 
     final response = await dio.post(url, data: body);
-
-    // final response = await ioClient.post(
-    //   Uri.parse(google),
-    //   headers: headers,
-    //   body: json.encode(body),
-    // );
-
     if (response.statusCode == 200) {
-      // Request successful, parse response body
-      //final responseData = json.decode(response.body);
-      print("open ai responseData:$response");
+      ChatResponse chatResponse = ChatResponse.fromJson(response.data);
+      return chatResponse;
     } else {
       // Request failed
       print('Request failed with status: ${response.statusCode}.');
+      return null;
     }
   }
 
