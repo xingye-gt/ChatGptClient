@@ -27,16 +27,26 @@ class OpenAiRepository {
     };
     Dio dio = _getDio();
     dio.options.headers = headers;
+    dio.options.connectTimeout = const Duration(seconds: 5);
+    final google = await dio.get("https://www.google.com");
+    //try catch
+    try {
+      final response = await dio.post(url, data: body);
+      if (response.statusCode == 200) {
+        ChatResponse chatResponse = ChatResponse.fromJson(response.data);
+        return chatResponse;
+      } else {
+        // Request failed
+        print('Request failed with status: ${response.statusCode}.');
+        return null;
+      }
 
-    final response = await dio.post(url, data: body);
-    if (response.statusCode == 200) {
-      ChatResponse chatResponse = ChatResponse.fromJson(response.data);
-      return chatResponse;
-    } else {
-      // Request failed
-      print('Request failed with status: ${response.statusCode}.');
+    } catch (e) {
+      print("$e");
       return null;
     }
+
+
   }
 
   static Dio _getDio() {
@@ -44,7 +54,9 @@ class OpenAiRepository {
       return _dio!;
     }
     _dio = Dio();
-    (_dio!.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+    //IOHttpClientAdapter
+
+    (_dio!.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
         (client) {
       //设置代理
       client.findProxy = (uri) {

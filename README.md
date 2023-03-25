@@ -34,3 +34,25 @@ networksetup -setwebproxystate "iOS Simulator" off
 networksetup -setsecurewebproxystate "iOS Simulator" off
 
 ```
+
+#### Android 设备设置代理
+
+直接在代码中设置, 将proxyServerAddress proxyPortNumber改为代理服务的ip和端口
+
+```
+	_dio = Dio();
+
+    (_dio!.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
+        (client) {
+      //设置代理
+      client.findProxy = (uri) {
+        return "PROXY $proxyServerAddress:$proxyPortNumber";
+      };
+      //校验证书
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) {
+        return true;
+      };
+    };
+
+```
