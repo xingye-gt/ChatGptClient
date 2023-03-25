@@ -36,44 +36,47 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(child: Text(_outputText)),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: '请输入文本',
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Expanded(child: Text(_outputText)),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: '请输入文本',
+                    ),
+                    onChanged: (text) {
+                      setState(() {
+                        _inputText = text;
+                      });
+                    },
                   ),
-                  onChanged: (text) {
-                    setState(() {
-                      _inputText = text;
-                    });
-                  },
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _makeRequest(_inputText);
-                },
-                child: const Text('Chat'),
-              ),
-            ]),
-            const SizedBox(height: 20),
-          ],
+                ElevatedButton(
+                  onPressed: () {
+                    _makeRequest(_inputText);
+                  },
+                  child: const Text('Chat'),
+                ),
+              ]),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
   }
 
   void _makeRequest(String message) {
-    SecureStorage.read(SecureStorage.keyOpenAiToken).then((value){
+    SecureStorage.read(SecureStorage.keyOpenAiToken).then((value) {
       ChatRequest request = ChatRequest();
       request.apiKey = value;
       request.message = message;
-      OpenAiRepository.makeHttpRequest(request).then((value){
+      OpenAiRepository.makeHttpRequest(request).then((value) {
         setState(() {
           _outputText = value!.choices[0].message.content;
         });

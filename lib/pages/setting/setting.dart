@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:chat/dal/openai/open_ai_repository.dart';
 import 'package:chat/dal/preferences/common_preferences.dart';
 import 'package:chat/dal/secure_storage/secure_storage.dart';
@@ -11,24 +13,22 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  String _token = "";
 
-  late TextEditingController _tokenController =
-      TextEditingController(text: _token);
+  late TextEditingController _tokenController = TextEditingController();
 
   final TextEditingController _ipController = TextEditingController();
 
   final TextEditingController _portController = TextEditingController();
 
+  bool proxyVerified = false;
+
   @override
   void initState() {
     super.initState();
-    _tokenController = TextEditingController(text: _token);
     SecureStorage.read(SecureStorage.keyOpenAiToken).then((value) => {
           //show token
           setState(() {
-            _token = value;
-            _tokenController.text = _token;
+            _tokenController.text = value;
           })
         });
     CommonPreferences.getString(CommonPreferences.keyProxyIp).then((value) => {
@@ -142,6 +142,16 @@ class _SettingsPageState extends State<SettingsPage> {
     );
     childViews.add(portExpanded);
     childViews.add(space);
+    Icon? icon = null;
+    if(proxyVerified == true){
+      icon = const Icon(Icons.done);
+    } else if (proxyVerified == false) {
+      icon = const Icon(Icons.clear);
+    }
+    if (null != icon) {
+      childViews.add(icon);
+      childViews.add(space);
+    }
     ElevatedButton checkButton = ElevatedButton(
       onPressed: _checkOpenAIConnection,
       child: const Text('Check'),
@@ -168,7 +178,11 @@ class _SettingsPageState extends State<SettingsPage> {
   ///检查openai连接
   void _checkOpenAIConnection() {
     OpenAiRepository.checkConnection(
-        _ipController.text.trim(), _portController.text.trim());
+        _ipController.text.trim(), _portController.text.trim()).then((value) => {
+          setState(() {
+            proxyVerified = value;
+          })
+    });
   }
 
   void _saveSettings() {
