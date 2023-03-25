@@ -1,3 +1,5 @@
+import 'package:chat/dal/openai/open_ai_repository.dart';
+import 'package:chat/dal/preferences/common_preferences.dart';
 import 'package:chat/dal/secure_storage/secure_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +31,20 @@ class _SettingsPageState extends State<SettingsPage> {
             _tokenController.text = _token;
           })
         });
+    CommonPreferences.getString(CommonPreferences.keyProxyIp).then((value) => {
+          //show ip
+          setState(() {
+            _ipController.text = value ?? "";
+          })
+        });
+    //get port
+    CommonPreferences.getString(CommonPreferences.keyProxyPort)
+        .then((value) => {
+              //show port
+              setState(() {
+                _portController.text = value ?? "";
+              })
+            });
   }
 
   @override
@@ -140,7 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
   ///保存
   Row _buildSaveRow() {
     ElevatedButton saveButton = ElevatedButton(
-      onPressed: _checkOpenAIConnection,
+      onPressed: _saveSettings,
       child: const Text('Save'),
     );
     Row row = Row(
@@ -149,15 +165,20 @@ class _SettingsPageState extends State<SettingsPage> {
     return row;
   }
 
-  ///保存token
-  void _saveToken() {
-    final token = _tokenController.text.trim();
-    SecureStorage.write(SecureStorage.keyOpenAiToken, token);
+  ///检查openai连接
+  void _checkOpenAIConnection() {
+    OpenAiRepository.checkConnection(
+        _ipController.text.trim(), _portController.text.trim());
   }
 
-  ///保存代理设置
-  void _saveProxy() {}
-
-  ///检查openai连接
-  void _checkOpenAIConnection() {}
+  void _saveSettings() {
+    final token = _tokenController.text.trim();
+    if (token.isNotEmpty) {
+      SecureStorage.write(SecureStorage.keyOpenAiToken, token);
+    }
+    String proxyIp = _ipController.text.trim();
+    String proxyPort = _portController.text.trim();
+    CommonPreferences.setString(CommonPreferences.keyProxyIp, proxyIp);
+    CommonPreferences.setString(CommonPreferences.keyProxyPort, proxyPort);
+  }
 }

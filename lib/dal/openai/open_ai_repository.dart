@@ -1,13 +1,14 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:chat/dal/openai/model/chat_request.dart';
+import 'package:chat/dal/secure_storage/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
 import 'model/chat_response.dart';
 
 class OpenAiRepository {
-
   static Dio? _dio;
 
   static Future<ChatResponse?> makeHttpRequest(ChatRequest request) async {
@@ -40,22 +41,34 @@ class OpenAiRepository {
         print('Request failed with status: ${response.statusCode}.');
         return null;
       }
-
     } catch (e) {
       print("$e");
       return null;
     }
-
-
   }
 
+  static Future<bool> checkConnection(String proxyIp, String proxyPort) async {
+    Dio dio = _newDio(proxyIp, proxyPort);
+    try {
+      final openAi = await dio.get("https://api.openai.com/v1/models");
+      return true;
+    } on DioError catch (e) {
+      if (e.type == DioErrorType.badResponse) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  ///deprecated
   static Dio _getDio() {
     if (null != _dio) {
       return _dio!;
     }
     _dio = Dio();
-    //IOHttpClientAdapter
-
     (_dio!.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
         (client) {
       //设置代理
@@ -69,5 +82,22 @@ class OpenAiRepository {
       };
     };
     return _dio!;
+  }
+
+  static Dio _newDio(String proxyIp, String proxyPort) {
+    Dio dio = Dio();
+    (dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
+        (client) {
+      //设置代理
+      client.findProxy = (uri) {
+        return "PROXY $proxyIp:$proxyPort";
+      };
+      //校验证书
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) {
+        return true;
+      };
+    };
+    return dio;
   }
 }
