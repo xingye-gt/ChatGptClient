@@ -43,32 +43,36 @@ class _HomeState extends State<Home> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Expanded(child: Text(_outputText)),
-              Row(children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: '请输入文本',
-                    ),
-                    onChanged: (text) {
-                      setState(() {
-                        _inputText = text;
-                      });
-                    },
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _makeRequest(_inputText);
-                  },
-                  child: const Text('Chat'),
-                ),
-              ]),
+              _buildInputRow(),
               const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Row _buildInputRow(){
+    return Row(children: [
+      Expanded(
+        child: TextField(
+          decoration: InputDecoration(
+            hintText: '请输入文本',
+          ),
+          onChanged: (text) {
+            setState(() {
+              _inputText = text;
+            });
+          },
+        ),
+      ),
+      ElevatedButton(
+        onPressed: () {
+          _makeRequest(_inputText);
+        },
+        child: const Text('Chat'),
+      ),
+    ]);
   }
 
   void _makeRequest(String message) {
