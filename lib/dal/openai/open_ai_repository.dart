@@ -1,8 +1,5 @@
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 import 'package:chat/dal/openai/model/chat_request.dart';
-import 'package:chat/dal/secure_storage/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 
@@ -10,6 +7,16 @@ import 'model/chat_response.dart';
 
 class OpenAiRepository {
   static Dio? _dio;
+
+  static Future<void> init(String? proxyIp, String? proxyPort) async {
+    _dio = _newDio(proxyIp, proxyPort);
+    return;
+  }
+
+  static Future<void> updateProxy(String? proxyIp, String? proxyPort) async {
+    _dio = _newDio(proxyIp, proxyPort);
+    return;
+  }
 
   static Future<ChatResponse?> makeHttpRequest(ChatRequest request) async {
     const String url = 'https://api.openai.com/v1/chat/completions';
@@ -26,9 +33,9 @@ class OpenAiRepository {
       ],
       'temperature': 0.7
     };
-    Dio dio = _getDio();
+    Dio dio = _getDio(null, null);
     dio.options.headers = headers;
-    dio.options.connectTimeout = const Duration(seconds: 5);
+
     final google = await dio.get("https://www.google.com");
     //try catch
     try {
@@ -50,7 +57,7 @@ class OpenAiRepository {
   static Future<bool> checkConnection(String proxyIp, String proxyPort) async {
     Dio dio = _newDio(proxyIp, proxyPort);
     try {
-      final openAi = await dio.get("https://api.openai.com/v1/models");
+      await dio.get("https://api.openai.com/v1/models");
       return true;
     } on DioError catch (e) {
       if (e.type == DioErrorType.badResponse) {
@@ -63,40 +70,34 @@ class OpenAiRepository {
     }
   }
 
-  ///deprecated
-  static Dio _getDio() {
+  static Dio _getDio(String? proxyIp, String? proxyPort) {
     if (null != _dio) {
       return _dio!;
     }
-    _dio = Dio();
-    (_dio!.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
-        (client) {
-      //设置代理
-      client.findProxy = (uri) {
-        return "PROXY 127.0.0.1:7890";
-      };
-      //校验证书
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) {
-        return true;
-      };
-    };
+    _dio = _newDio(proxyIp, proxyPort);
     return _dio!;
   }
 
-  static Dio _newDio(String proxyIp, String proxyPort) {
+  ///创建dio对象
+  static Dio _newDio(String? proxyIp, String? proxyPort) {
     Dio dio = Dio();
+    dio.options.connectTimeout = const Duration(seconds: 30);
     (dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
         (client) {
-      //设置代理
-      client.findProxy = (uri) {
-        return "PROXY $proxyIp:$proxyPort";
-      };
-      //校验证书
-      client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) {
-        return true;
-      };
+      if (null != proxyIp &&
+          proxyIp.isNotEmpty &&
+          null != proxyPort &&
+          proxyPort.isNotEmpty) {
+        //设置代理
+        client.findProxy = (uri) {
+          return "PROXY $proxyIp:$proxyPort";
+        };
+        //校验证书
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) {
+          return true;
+        };
+      }
     };
     return dio;
   }

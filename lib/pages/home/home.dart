@@ -1,5 +1,6 @@
 import 'package:chat/dal/openai/model/chat_request.dart';
 import 'package:chat/dal/openai/open_ai_repository.dart';
+import 'package:chat/dal/preferences/common_preferences.dart';
 import 'package:chat/dal/secure_storage/secure_storage.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,13 @@ class _HomeState extends State<Home> {
   String _inputText = '';
   String _outputText = '';
 
+
+  @override
+  void initState() {
+    super.initState();
+    _initDio();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +33,7 @@ class _HomeState extends State<Home> {
         title: Text(widget.title),
         actions: <Widget>[
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings),
             onPressed: () {
               //go to setting page
               Navigator.push(
@@ -56,7 +64,7 @@ class _HomeState extends State<Home> {
     return Row(children: [
       Expanded(
         child: TextField(
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             hintText: '请输入文本',
           ),
           onChanged: (text) {
@@ -86,5 +94,11 @@ class _HomeState extends State<Home> {
         });
       });
     });
+  }
+
+  void _initDio() async{
+    String? ip = await CommonPreferences.getString(CommonPreferences.keyProxyIp);
+    String? port = await CommonPreferences.getString(CommonPreferences.keyProxyPort);
+    OpenAiRepository.init(ip, port);
   }
 }
